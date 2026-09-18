@@ -26,6 +26,7 @@ io.on("connection", (socket) => {
   // this function is used to join a room
   socket.on("send_message", (data) => {
     socket.to(data.room).emit("receive_message", data);
+    console.log(data);
   });
   // this function is used to send a message
   socket.on("typing", ({username, room}) => socket.to(room).emit("typing", username));

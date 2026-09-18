@@ -14,14 +14,17 @@ type Message = {
 const socket = io("http://localhost:3001");
 
 export default function Chatroom({ username, room }: Props) {
-  console.log(username, room);
   const [message, setMessage] = useState("");
   const [messages, setMessaages] = useState<Message[]>([]);
+  console.log(messages, "messages");
   useEffect(() => {
     socket.emit("join_room", room);
     socket.on("receive_message", (data) => {
       setMessaages((prev) => [...prev, data]);
     });
+    return () => {
+      socket.off("receive_message");
+    };
   }, [room]);
 
   const sendMessage = () => {
@@ -33,11 +36,13 @@ export default function Chatroom({ username, room }: Props) {
     };
     if (message.trim()) {
       socket.emit("send_message", messageData);
+      console.log(message, "before setting the state");
       setMessaages((prev) => [...prev, messageData]);
+      console.log(messages, "after setting the state");
       setMessage("");
     }
   };
-
+  console.log(messages);
   return (
     <div>
       <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4">
@@ -65,31 +70,44 @@ export default function Chatroom({ username, room }: Props) {
 
           {/* Messages */}
           <main className="flex-1 space-y-4 overflow-y-auto bg-slate-950/60 p-5">
-            {/* Empty State */}
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <div className="mb-4 text-5xl">💬</div>
+            {messages.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center text-center">
+                <div className="mb-4 text-5xl">💬</div>
 
-              <h3 className="text-lg font-semibold">No messages yet</h3>
+                <h3 className="text-lg font-semibold">No messages yet</h3>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Start the conversation!
-              </p>
-            </div>
+                <p className="mt-1 text-sm text-slate-500">
+                  Start the conversation!
+                </p>
+              </div>
+            ) : (
+              messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`flex ${
+                    msg.author === username ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[70%] rounded-2xl px-4 py-3 ${
+                      msg.author === username
+                        ? "rounded-br-md bg-violet-600"
+                        : "rounded-bl-md bg-slate-800"
+                    }`}
+                  >
+                    <p className="mb-1 text-xs font-medium text-slate-300">
+                      {msg.author}
+                    </p>
 
-            {/* 
-                Later you will render messages here.
+                    <p className="text-sm text-white">{msg.message}</p>
 
-                Example:
-
-                <div className="flex justify-end">
-                  <div className="max-w-[70%] rounded-2xl rounded-br-md bg-violet-600 px-4 py-3">
-                    <p>Hello!</p>
-                    <span className="text-xs text-violet-200">
-                      10:30 PM
+                    <span className="mt-1 block text-xs text-violet-200">
+                      {msg.time}
                     </span>
                   </div>
                 </div>
-              */}
+              ))
+            )}
           </main>
 
           {/* Input */}
