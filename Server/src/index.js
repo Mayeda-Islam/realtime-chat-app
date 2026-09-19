@@ -4,6 +4,7 @@ import express from "express";
 import http from "http";
 import cors from "cors";
 import { Server } from "socket.io";
+import authRoutes from "./routes/authRoutes.js";
 // আপনার বাকি সব require-কে এভাবে আধুনিক import-এ রূপান্তর করে নিন...
 
 const app = express();
@@ -12,6 +13,10 @@ app.use(cors());
 app.use(express.json());
 
 const server = http.createServer(app);
+
+
+// Attach your clean modular routes to the /api/auth prefix
+app.use("/api/auth", authRoutes);
 
 const io = new Server(server, {
   cors: {
