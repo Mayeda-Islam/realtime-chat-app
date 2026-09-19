@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Chat from "./pages/Chat";
-import ConversationList from "./pages/ConversationList";
 
 
 // Guard Component to protect routes requiring authentication
@@ -22,7 +21,7 @@ const PublicRoute = ({ children } : { children: React.ReactNode }) => {
 
   if (token) {
     // If user is already logged in, redirect directly to chat
-    return <Navigate to="/conversationList" replace />;
+    return <Navigate to="/chat" replace />;
   }
 
   return children;
@@ -47,16 +46,16 @@ function App() {
 
         {/* Protected Route - Chat Screen */}
         <Route
-          path="/conversationList"
+          path="/chat"
           element={
             <ProtectedRoute>
-              <ConversationList />
+              <Chat />
             </ProtectedRoute>
           }
         />
 
         {/* Catch-all route for non-existing pages */}
-        {/* <Route path="*" element={<Navigate to="/login" replace />} /> */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

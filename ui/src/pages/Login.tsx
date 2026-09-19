@@ -78,7 +78,7 @@ const Login = () => {
       console.log("Login response:", data);
 
       // You can navigate after login
-      navigate("/conversationList");
+      navigate("/Chat");
     } catch (error) {
       console.error(error);
       setError("Unable to connect to the server.");
