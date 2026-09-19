@@ -1,151 +1,153 @@
-import React, { useEffect, useState } from "react";
-import { io, Socket } from "socket.io-client";
+// import React, { useEffect, useState } from "react";
+// import { io, Socket } from "socket.io-client";
 
-interface Props {
-  username: string;
-  room: string;
-}
-type Message = {
-  author: string;
-  message: string;
-  time: string;
-  room: string;
-};
-const socket = io("http://localhost:3001");
+// interface Props {
+//   username: string;
+//   room: string;
+// }
+// type Message = {
+//   author: string;
+//   message: string;
+//   time: string;
+//   room: string;
+// };
+// const socket = io("http://localhost:3001");
 
-export default function Chatroom({ username, room }: Props) {
-  const [message, setMessage] = useState("");
-  const [messages, setMessaages] = useState<Message[]>([]);
-  console.log(messages, "messages");
-  useEffect(() => {
-    socket.emit("join_room", room);
-    socket.on("receive_message", (data) => {
-      setMessaages((prev) => [...prev, data]);
-    });
-    return () => {
-      socket.off("receive_message");
-    };
-  }, [room]);
+// export default function Chatroom({ username, room }: Props) {
+//   const [message, setMessage] = useState("");
+//   const [messages, setMessaages] = useState<Message[]>([]);
+//   console.log(messages, "messages");
+//   useEffect(() => {
+//     socket.emit("join_room", room);
+//     socket.on("receive_message", (data) => {
+//       setMessaages((prev) => [...prev, data]);
+//     });
+//     return () => {
+//       socket.off("receive_message");
+//     };
+//   }, [room]);
 
-  const sendMessage = () => {
-    const messageData = {
-      author: username,
-      message,
-      time: new Date().toLocaleTimeString(),
-      room,
-    };
-    if (message.trim()) {
-      socket.emit("send_message", messageData);
-      console.log(message, "before setting the state");
-      setMessaages((prev) => [...prev, messageData]);
-      console.log(messages, "after setting the state");
-      setMessage("");
-    }
-  };
-  console.log(messages);
-  return (
-    <div>
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4">
-        <div className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl">
-          {/* Header */}
-          <header className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-xl">
-                💬
-              </div>
+//   const sendMessage = () => {
+//     const messageData = {
+//       author: username,
+//       message,
+//       time: new Date().toLocaleTimeString(),
+//       room,
+//     };
+//     if (message.trim()) {
+//       socket.emit("send_message", messageData);
+//       console.log(message, "before setting the state");
+//       setMessaages((prev) => [...prev, messageData]);
+//       console.log(messages, "after setting the state");
+//       setMessage("");
+//     }
+//   };
+//   console.log(messages);
+//   return (
+//     <div>
+//       <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4">
+//         <div className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl">
+//           {/* Header */}
+//           <header className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-5 py-4">
+//             <div className="flex items-center gap-3">
+//               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-xl">
+//                 💬
+//               </div>
 
-              <div>
-                <h2 className="font-bold">ChitChat</h2>
-                <p className="text-xs text-slate-400">Real-time chat</p>
-              </div>
-            </div>
+//               <div>
+//                 <h2 className="font-bold">ChitChat</h2>
+//                 <p className="text-xs text-slate-400">Real-time chat</p>
+//               </div>
+//             </div>
 
-            {/* Room */}
-            <div className="rounded-lg bg-slate-800 px-4 py-2 text-right">
-              <p className="text-xs text-slate-500">Room</p>
+//             {/* Room */}
+//             <div className="rounded-lg bg-slate-800 px-4 py-2 text-right">
+//               <p className="text-xs text-slate-500">Room</p>
 
-              <p className="text-sm font-semibold text-violet-400">{room}</p>
-            </div>
-          </header>
+//               <p className="text-sm font-semibold text-violet-400">{room}</p>
+//             </div>
+//           </header>
 
-          {/* Messages */}
-          <main className="flex-1 space-y-4 overflow-y-auto bg-slate-950/60 p-5">
-            {messages.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center text-center">
-                <div className="mb-4 text-5xl">💬</div>
+//           {/* Messages */}
+//           <main className="flex-1 space-y-4 overflow-y-auto bg-slate-950/60 p-5">
+//             {messages.length === 0 ? (
+//               <div className="flex h-full flex-col items-center justify-center text-center">
+//                 <div className="mb-4 text-5xl">💬</div>
 
-                <h3 className="text-lg font-semibold">No messages yet</h3>
+//                 <h3 className="text-lg font-semibold">No messages yet</h3>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Start the conversation!
-                </p>
-              </div>
-            ) : (
-              messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex ${
-                    msg.author === username ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                      msg.author === username
-                        ? "rounded-br-md bg-violet-600"
-                        : "rounded-bl-md bg-slate-800"
-                    }`}
-                  >
-                    <p className="mb-1 text-xs font-medium text-slate-300">
-                      {msg.author}
-                    </p>
+//                 <p className="mt-1 text-sm text-slate-500">
+//                   Start the conversation!
+//                 </p>
+//               </div>
+//             ) : (
+//               messages.map((msg, index) => (
+//                 <div
+//                   key={index}
+//                   className={`flex ${
+//                     msg.author === username ? "justify-end" : "justify-start"
+//                   }`}
+//                 >
+//                   <div
+//                     className={`max-w-[70%] rounded-2xl px-4 py-3 ${
+//                       msg.author === username
+//                         ? "rounded-br-md bg-violet-600"
+//                         : "rounded-bl-md bg-slate-800"
+//                     }`}
+//                   >
+//                     <p className="mb-1 text-xs font-medium text-slate-300">
+//                       {msg.author}
+//                     </p>
 
-                    <p className="text-sm text-white">{msg.message}</p>
+//                     <p className="text-sm text-white">{msg.message}</p>
 
-                    <span className="mt-1 block text-xs text-violet-200">
-                      {msg.time}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </main>
+//                     <span className="mt-1 block text-xs text-violet-200">
+//                       {msg.time}
+//                     </span>
+//                   </div>
+//                 </div>
+//               ))
+//             )}
+//           </main>
 
-          {/* Input */}
-          <div className="border-t border-slate-800 bg-slate-900 p-4">
-            <div className="flex gap-3">
-              <input
-                type="text"
-                placeholder="Write a message..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    sendMessage();
-                  }
-                }}
-                className="flex-1 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
-              />
+//           {/* Input */}
+//           <div className="border-t border-slate-800 bg-slate-900 p-4">
+//             <div className="flex gap-3">
+//               <input
+//                 type="text"
+//                 placeholder="Write a message..."
+//                 value={message}
+//                 onChange={(e) => setMessage(e.target.value)}
+//                 onKeyDown={(e) => {
+//                   if (e.key === "Enter") {
+//                     sendMessage();
+//                   }
+//                 }}
+//                 className="flex-1 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
+//               />
 
-              <button
-                // onClick={sendMessage}
-                // disabled={!message.trim()}
-                className="rounded-xl bg-violet-600 px-5 text-xl transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                ➤
-              </button>
-            </div>
-          </div>
+//               <button
+//                 // onClick={sendMessage}
+//                 // disabled={!message.trim()}
+//                 className="rounded-xl bg-violet-600 px-5 text-xl transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
+//               >
+//                 ➤
+//               </button>
+//             </div>
+//           </div>
 
-          {/* Status */}
-          <div className="border-t border-slate-800 bg-slate-900 px-5 py-3">
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              <span className="h-2 w-2 rounded-full bg-green-500"></span>
-              Connected as
-              <span className="font-semibold text-slate-200">{username}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+//           {/* Status */}
+//           <div className="border-t border-slate-800 bg-slate-900 px-5 py-3">
+//             <div className="flex items-center gap-2 text-xs text-slate-400">
+//               <span className="h-2 w-2 rounded-full bg-green-500"></span>
+//               Connected as
+//               <span className="font-semibold text-slate-200">{username}</span>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
