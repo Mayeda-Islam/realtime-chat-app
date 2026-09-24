@@ -1,15 +1,15 @@
 import prisma from "../config/prisma.js";
 import { getMyConversations } from "../services/conversationService.js";
 
-// ১. আপনার সব কনভারসেশন লিস্ট তুলে আনার কন্ট্রোলার
+// 1. Controller to fetch the list of all conversations for the logged-in user
 export const getConversations = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // আপনার conversationService থেকে ডাটা নিয়ে আসা হচ্ছে
+    // Fetching data from conversationService
     const conversations = await getMyConversations(userId);
     
-    // ডাটা সহ সফল রেসপন্স পাঠানো হচ্ছে
+    // Sending a successful response with the conversation data
     return res.status(200).json({
       success: true,
       data: conversations
@@ -23,11 +23,11 @@ export const getConversations = async (req, res) => {
   }
 };
 
-// ২. নতুন বা পুরনো ওয়ান-টু-ওয়ান প্রাইভেট চ্যাট অ্যাক্সেস করার কন্ট্রোলার
+// 2. Controller to access a new or existing one-to-one private chat room
 export const accessConversation = async (req, res) => {
   try {
-    const currentUserId = req.user.id; 
-    const { receiverId } = req.body; 
+    const currentUserId = req.user.id; // Your ID extracted from the auth middleware
+    const { receiverId } = req.body;  // The ID of the user you want to chat with
 
     if (!receiverId) {
       return res.status(400).json({ 
@@ -36,7 +36,7 @@ export const accessConversation = async (req, res) => {
       });
     }
 
-    // টেবিল ও কলামের নাম মিলিয়ে চ্যাট রুম চেক করার লজিক
+    // Checking if a one-to-one 'private' chat already exists between these two users
     const existingConversation = await prisma.conversations.findFirst({
       where: {
         type: "private", 
@@ -47,6 +47,7 @@ export const accessConversation = async (req, res) => {
       }
     });
 
+    // If an existing conversation room is found, return its ID
     if (existingConversation) {
       return res.status(200).json({
         success: true,
@@ -55,11 +56,11 @@ export const accessConversation = async (req, res) => {
       });
     }
 
-    // নতুন চ্যাট রুম এবং আপনার টেবিল অনুযায়ী মেম্বার তৈরি করার লজিক
+    // If no conversation room exists, create a new one along with its members
     const newConversation = await prisma.conversations.create({
       data: {
         type: "private",
-        name: null,
+        name: null, // One-to-one private chats do not have a hardcoded room name
         conversation_members: {
           create: [
             { user_id: currentUserId },
