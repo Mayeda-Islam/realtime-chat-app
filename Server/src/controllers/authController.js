@@ -54,7 +54,7 @@ export async function login(req, res) {
     }
 
     const isPasswordValid = password_hash === user.password_hash;
-    console.log(user);
+    // console.log(user);
     if (!isPasswordValid) {
       return res
         .status(401)
