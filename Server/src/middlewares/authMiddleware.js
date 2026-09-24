@@ -41,11 +41,11 @@ const authMiddleware = (req, res, next) => {
     );
 
     // 6. Attach the user's data to the request object ('req').
-    // When the user logged in, their 'userId' was locked inside the token. 
-    // Now we extract it (`decoded.userId`) and attach it to `req.user` so that 
+    // When the user logged in, their 'id' was stored inside the token.
+    // Now we extract it (`decoded.id`) and attach it to `req.user` so that
     // the next functions/controllers down the line know exactly WHO is making this request.
     req.user = {
-      id: decoded.userId,
+      id: decoded.id,
     };
     
     // Log it in the console just for development/debugging purposes.
