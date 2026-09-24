@@ -6,6 +6,7 @@ import cors from "cors";
 import { Server } from "socket.io";
 import authRoutes from "./routes/authRoutes.js";
 import conversationRoute from "./routes/conversationRoute.js"
+import messageRouter from "./routes/sendMessageRoute.js"
 const app = express();
 
 app.use(cors());
@@ -17,6 +18,8 @@ const server = http.createServer(app);
 // Attach your clean modular routes to the /api/auth prefix
 app.use("/api/auth", authRoutes);
 app.use("/api", conversationRoute);
+// Mount the message routes under an API prefix path
+app.use("/api", messageRouter);
 
 const io = new Server(server, {
   cors: {
