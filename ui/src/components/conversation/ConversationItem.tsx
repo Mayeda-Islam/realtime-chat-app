@@ -6,7 +6,7 @@ export interface ConversationUser {
   avatar: string;
   status?: "online" | "offline";
   lastMessage?: string;
-  // unreadCount?: number;
+  unreadCount?: number;
   type?: "private" | "group";
 }
 

@@ -34,12 +34,15 @@ const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key";
 
 export async function login(req, res) {
   const { email, password_hash } = req.body;
-  
+
   if (!email || !password_hash) {
-    console.log(email,password_hash);
+    console.log(email, password_hash);
     return res
       .status(400)
-      .json({ success: false, message: `${email} ${password_hash} is required` });
+      .json({
+        success: false,
+        message: `${email} ${password_hash} is required`,
+      });
   }
 
   try {
@@ -51,7 +54,7 @@ export async function login(req, res) {
     }
 
     const isPasswordValid = password_hash === user.password_hash;
-
+    console.log(user);
     if (!isPasswordValid) {
       return res
         .status(401)

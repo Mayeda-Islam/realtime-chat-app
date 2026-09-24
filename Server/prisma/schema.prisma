@@ -47,6 +47,9 @@ model users {
   email                String                 @unique @db.VarChar(255)
   password_hash        String
   created_at           DateTime?              @default(now()) @db.Timestamp(6)
+  avatar               String?                @default("")
+  is_online            Boolean?
+  last_seen            DateTime?              @db.Timestamptz(6)
   conversation_members conversation_members[]
   messages             messages[]
 }
