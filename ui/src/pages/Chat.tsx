@@ -164,7 +164,7 @@ const Chat = () => {
     if (result.success && result.data) {
       const createdUser: ConversationUser = {
         conversationId: result.conversationId,
-        type: result.type || "private",
+        type: result.type ,
         name: result.name,
         avatar: result.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
         status: result.status || "offline"
@@ -197,7 +197,7 @@ const Chat = () => {
     // setActiveUser(newGroup);
   };
 
-  const activeMessages = activeUser ? messages[activeUser.id] || [] : [];
+  const activeMessages = activeUser ? messages[activeUser.conversationId] || [] : [];
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
