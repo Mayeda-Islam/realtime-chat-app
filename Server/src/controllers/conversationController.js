@@ -28,8 +28,10 @@ export const accessConversation = async (req, res) => {
   try {
     const currentUserId = req.user.id; // Your ID extracted from the auth middleware
     const { receiverId } = req.body;  // The ID of the user you want to chat with
+    console.log(currentUserId,req.body, "currentUserId");
 
     if (!receiverId) {
+      console.log(receiverId);
       return res.status(400).json({ 
         success: false, 
         message: "Receiver ID is required" 
