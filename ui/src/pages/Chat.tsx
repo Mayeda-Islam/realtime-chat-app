@@ -129,39 +129,72 @@ const Chat = () => {
   const onSelectUser = (user: ConversationUser) => setActiveUser(user);
 
   // নতুন চ্যাট শুরু করার লজিক (চালু করা হলো)
-  const onNewChat = (query: string) => {
-    const existingUser = users.find(
-      (user) => user.name.toLowerCase() === query.toLowerCase(),
-    );
-    if (existingUser) {
-      setActiveUser(existingUser);
-      return;
+ const onNewChat = async (query: string) => {
+  // ১. অলরেডি যদি এই নামের ইউজার চ্যাট লিস্টে থাকে, তবে নতুন করে এপিআই কল করার দরকার নেই
+  const existingUser = users.find(
+    (user) => user.name.toLowerCase() === query.toLowerCase()
+  );
+  
+  if (existingUser) {
+    setActiveUser(existingUser);
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("token");
+
+    // ২. ব্যাকএন্ডের POST এপিআই-তে রিকোয়েস্ট পাঠানো
+    const response = await fetch("http://localhost:3001/api/access", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { "Authorization": `Bearer ${token}` }),
+      },
+      // বডিতে ইউজারের নাম বা আপনার ব্যাকএন্ড যা রিকোয়ার করে (যেমন: { name: query }) সেটি পাঠাবেন
+      body: JSON.stringify({ name: query }), 
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create or access chat room: ${response.status}`);
     }
 
-    const newUser: ConversationUser = {
-      id: `user_${Date.now()}`,
-      name: query,
-      avatar:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-      status: "offline",
-      lastMessage: "Start a conversation",
-    };
-    setUsers((prev) => [...prev, newUser]);
-    setActiveUser(newUser);
-  };
+    const result = await response.json();
+
+    // ৩. ব্যাকএন্ড যদি { success: true, data: {...} } ফরম্যাটে নতুন তৈরি হওয়া ইউজারের ডেটা পাঠায়
+    if (result.success && result.data) {
+      const createdUser: ConversationUser = {
+        conversationId: result.conversationId,
+        type: result.type || "private",
+        name: result.name,
+        avatar: result.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+        status: result.status || "offline"
+        
+      };
+
+      // ৪. স্টেট আপডেট করা হলো যা সম্পূর্ণ রিয়েল ডেটার সাথে সিঙ্কড
+      setUsers((prev) => [...prev, createdUser]);
+      setActiveUser(createdUser);
+    } 
+    
+
+  } catch (error) {
+    console.error("Error creating new chat via access API:", error);
+    // আপনি চাইলে এখানে ইউজারকে কোনো নোটিফিকেশন বা অ্যালার্ট দেখাতে পারেন
+  }
+};
 
   // গ্রুপ তৈরি করার লজিক
   const onCreateGroup = (groupName: string) => {
-    const newGroup: ConversationUser = {
-      id: `group_${Date.now()}`,
-      name: groupName,
-      avatar:
-        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=100&auto=format&fit=crop&q=80",
-      type: "general",
-      lastMessage: "New group created",
-    };
-    setUsers((prev) => [...prev, newGroup]);
-    setActiveUser(newGroup);
+    // const newGroup: ConversationUser = {
+    //   id: `group_${Date.now()}`,
+    //   name: groupName,
+    //   avatar:
+    //     "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=100&auto=format&fit=crop&q=80",
+    //   type: "general",
+    //   lastMessage: "New group created",
+    // };
+    // setUsers((prev) => [...prev, newGroup]);
+    // setActiveUser(newGroup);
   };
 
   const activeMessages = activeUser ? messages[activeUser.id] || [] : [];
