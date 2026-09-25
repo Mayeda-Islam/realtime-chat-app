@@ -1,13 +1,20 @@
 import React from "react";
 
+interface LastMessage {
+  created_at: String;
+  id: number;
+  message: string;
+
+  sender_id: number;
+}
 export interface ConversationUser {
-  id: string;
+  conversationId: string;
   name: string;
   avatar: string;
   status?: "online" | "offline";
-  lastMessage?: string;
-  unreadCount?: number;
-  type?: "private" | "group";
+  lastMessage?: LastMessage;
+  // unreadCount?: number;
+  type?: "private" | "general";
 }
 
 interface ConversationItemProps {
@@ -36,7 +43,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
           alt={user.name}
           className="w-12 h-12 rounded-full object-cover border border-border"
         />
-        {user.type !== "group" && (
+        {user.type !== "general" && (
           <span
             className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-surface ${
               user.status === "online" ? "bg-success" : "bg-text-muted"
@@ -52,7 +59,9 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
           </h3>
         </div>
         <p className="text-xs text-text-secondary truncate mt-0.5">
-          {user.lastMessage}
+          {user.lastMessage
+            ? user.lastMessage.message
+            : "Start a conversation"}{" "}
         </p>
       </div>
 
