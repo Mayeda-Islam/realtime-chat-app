@@ -244,6 +244,7 @@ const Login = () => {
             Don't have an account?{" "}
             <button
               type="button"
+              onClick={() => navigate("/register")}
               className="font-medium cursor-pointer text-primary hover:text-primary-dark transition"
             >
               Create account
