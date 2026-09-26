@@ -230,8 +230,8 @@ export const accessConversation = async (req, res) => {
       conversationId: conversation.id,
 
       type: conversation.type,
-
-      name: receiverUser.username,
+      email: receiverUser.email,
+      username: receiverUser.username,
 
       avatar: receiverUser.avatar || null,
 

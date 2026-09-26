@@ -1,4 +1,5 @@
 import { createMessage } from "../services/sendMessageService.js";
+import prisma from "../config/prisma.js";
 
 // Controller to process sending messages
 export const sendMessage = async (req, res) => {
@@ -39,5 +40,39 @@ console.log(newMessage, "newMessage");
       success: false,
       message: "Server error while sending message",
     });
+  }
+};
+
+export const getMessages = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    if (!conversationId) {
+      return res.status(400).json({ success: false, message: "Conversation ID is required" });
+    }
+
+    // প্রিজমা দিয়ে ওই চ্যাট রুমের সকল মেসেজ বের করা (পুরোনো থেকে নতুন ক্রমে)
+    const messages = await prisma.messages.findMany({
+      where: {
+        conversation_id: Number(conversationId),
+      },
+      orderBy: {
+        created_at: "asc", // চ্যাটে মেসেজ নিচে নিচে সাজানোর জন্য asc
+      },
+      select: {
+        id: true,
+        message: true,
+        sender_id: true,
+        created_at: true,
+      },
+    });
+    console.log(messages, "messages");
+    return res.status(200).json({
+      success: true,
+      data: messages,
+    });
+  } catch (error) {
+    console.error("Get messages error:", error);
+    return res.status(500).json({ success: false, message: "Server error while fetching messages" });
   }
 };

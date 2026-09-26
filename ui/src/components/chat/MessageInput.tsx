@@ -11,7 +11,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 }) => {
   const [inputText, setInputText] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!inputText.trim()) return;
 

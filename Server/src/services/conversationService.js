@@ -75,7 +75,7 @@ export const getMyConversations = async (userId) => {
 
       // Private হলে অন্য user's username
       // General হলে conversation-এর name
-      name:
+      username:
         conversation.type === "private"
           ? otherUser?.username || "Unknown User"
           : conversation.name,
@@ -96,7 +96,7 @@ export const getMyConversations = async (userId) => {
 
       // সর্বশেষ message
       lastMessage: conversation.messages[0] || null,
-
+      email: otherUser?.email || null,
       // মোট message
       messageCount: conversation._count.messages,
     };
