@@ -278,65 +278,7 @@ const Chat = () => {
     }
   };
 
-  const handleProfileUpdate = async (updatedData: ProfileUpdateData) => {
-  try {
-    const token = localStorage.getItem("token");
 
-    if (!token) {
-      throw new Error("Authentication token not found");
-    }
-
-    const response = await fetch(
-      "http://localhost:3001/api/users/profile",
-      {
-        method: "PUT",
-
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-
-        body: JSON.stringify({
-          username: updatedData.username,
-          avatar: updatedData.avatar,
-        }),
-      }
-    );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        result.message || "Failed to update profile"
-      );
-    }
-
-    // Update currentUser in React state
-    setCurrentUser((prev) => ({
-      ...prev,
-      ...result.user,
-    }));
-
-    // Update localStorage
-    const oldUser = JSON.parse(
-      localStorage.getItem("user") || "{}"
-    );
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        ...oldUser,
-        ...result.user,
-      })
-    );
-
-    return result;
-  } catch (error) {
-    console.error("Profile update error:", error);
-
-    throw error;
-  }
-};
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* ================= SIDEBAR ================= */}
@@ -443,11 +385,11 @@ const Chat = () => {
               <main className="flex-1 flex flex-col bg-background h-full">
 
   {showProfile ? (
-    <ProfileView
-      currentUser={currentUser}
-      onClose={() => setShowProfile(false)}
-      onUpdate={handleProfileUpdate}
-    />
+     <ProfileView 
+    currentUser={currentUser} 
+    onClose={() => setShowProfile(false)} 
+    setCurrentUser={setCurrentUser} // 🟢 পেরেন্ট স্টেট সরাসরি পাস করে দেওয়া হলো
+  />
   ) : (
     <>
       {activeUser && <ChatHeader activeUser={activeUser} />}
