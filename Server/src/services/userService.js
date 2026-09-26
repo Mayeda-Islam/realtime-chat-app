@@ -17,7 +17,8 @@ export async function createUser({ username, email, password_hash }) {
       email,
       password_hash: password_hash,
       avatar: "",
-      is_online: false,
+      is_online: true,
+      last_seen: new Date(),
     },
 
     // Don't return password_hash

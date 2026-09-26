@@ -57,6 +57,8 @@ export async function signup(req, res) {
       });
     }
 
+
+
     // -----------------------------------------------
     // 4. Create user
     // -----------------------------------------------
@@ -66,14 +68,30 @@ export async function signup(req, res) {
       email,
       password_hash,
     });
+    // -----------------------------------------------
+    // 5. Create JWT
+    // -----------------------------------------------
 
+    const token = jwt.sign(
+      {
+        id: newUser.id,
+        username: username,
+      },
+
+      JWT_SECRET,
+
+      {
+        expiresIn: "1d",
+      },
+    );
     // -----------------------------------------------
     // 5. Return user information
     // -----------------------------------------------
-
+    console.log(newUser, "newUser");
     return res.status(201).json({
       success: true,
       message: "User registered successfully",
+      token,
       user: newUser,
     });
   } catch (error) {
@@ -202,9 +220,9 @@ export async function logout(req, res) {
     });
 
     // ফ্রন্টএন্ডকে একটা মেসেজ পাঠানো হচ্ছে যে ব্যাকএন্ডের কাজ শেষ
-    res.json({ 
-      success: true, 
-      message: 'Logged out successfully from server.' 
+    res.json({
+      success: true,
+      message: "Logged out successfully from server.",
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
