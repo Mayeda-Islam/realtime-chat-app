@@ -155,43 +155,44 @@ const Chat = () => {
   try {
     const token = localStorage.getItem("token");
 
-    // ২. ব্যাকএন্ডের POST এপিআই-তে রিকোয়েস্ট পাঠানো
+    // ২. ব্যাকএন্ডের POST এপিআই-তে 'query' কী (key) দিয়ে রিকোয়েস্ট পাঠানো হচ্ছে
     const response = await fetch("http://localhost:3001/api/access", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...(token && { "Authorization": `Bearer ${token}` }),
       },
-      // বডিতে ইউজারের নাম বা আপনার ব্যাকএন্ড যা রিকোয়ার করে (যেমন: { name: query }) সেটি পাঠাবেন
-      body: JSON.stringify({ name: query }), 
+      body: JSON.stringify({ query: query }), 
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to create or access chat room: ${response.status}`);
-    }
 
     const result = await response.json();
 
-    // ৩. ব্যাকএন্ড যদি { success: true, data: {...} } ফরম্যাটে নতুন তৈরি হওয়া ইউজারের ডেটা পাঠায়
+    // যদি ব্যাকএন্ড কোনো এরর দেয় (যেমন: ৪MD৪ User Not Found বা ৪০০)
+    if (!response.ok) {
+      alert(result.message || "Failed to access conversation");
+      return;
+    }
+
+    // ৩. ব্যাকএন্ড থেকে সফলভাবে ডেটা আসলে ফ্রন্টএন্ড স্টেট আপডেট
     if (result.success && result.data) {
       const createdUser: ConversationUser = {
-        conversationId: result.conversationId,
-        type: result.type ,
-        name: result.name,
-        avatar: result.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-        status: result.status || "offline"
-        
+        conversationId: result.data.conversationId,
+        type: result.data.type,
+        name: result.data.name, // ব্যাকএন্ড থেকে আসা আসল ইউজারনেম
+        avatar: result.data.avatar || null,
+        status: result.data.status || "offline",
+        // messageCount: result.data.messageCount || 0,
+        lastMessage: result.data.lastMessage || null
       };
 
-      // ৪. স্টেট আপডেট করা হলো যা সম্পূর্ণ রিয়েল ডেটার সাথে সিঙ্কড
+      // লিস্টে নতুন ইউজারকে যোগ করা এবং চ্যাট স্ক্রিনে তাকে একটিভ করা
       setUsers((prev) => [...prev, createdUser]);
       setActiveUser(createdUser);
     } 
-    
 
   } catch (error) {
     console.error("Error creating new chat via access API:", error);
-    // আপনি চাইলে এখানে ইউজারকে কোনো নোটিফিকেশন বা অ্যালার্ট দেখাতে পারেন
+    alert("Something went wrong while starting the chat.");
   }
 };
 

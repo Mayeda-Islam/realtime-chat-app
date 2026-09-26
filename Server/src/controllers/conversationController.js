@@ -25,7 +25,6 @@ export const getConversations = async (req, res) => {
   }
 };
 
-
 // ======================================================
 // ACCESS EXISTING PRIVATE CHAT OR CREATE NEW ONE
 // ======================================================
@@ -34,32 +33,74 @@ export const accessConversation = async (req, res) => {
   try {
     // Logged-in user
     const currentUserId = req.user.id;
-
-    // User whom we want to chat with
-    const { receiverId } = req.body;
+    // ১. ফ্রন্টএন্ড থেকে আসা সাধারণ 'query' রিসিভ করা হলো
+    const { query } = req.body;
 
     console.log("Current User ID:", currentUserId);
-    console.log("Receiver ID:", receiverId);
+    console.log("Searching for User via:", query);
 
-    // --------------------------------------------------
-    // 1. Validate receiverId
-    // --------------------------------------------------
-
-    if (!receiverId) {
+    // যদি ফ্রন্টএন্ড থেকে কিছুই না আসে
+    if (!query || typeof query !== "string") {
       return res.status(400).json({
         success: false,
-        message: "Receiver ID is required",
+        message: "Username or Email input is required",
       });
     }
 
-    const receiverUserId = Number(receiverId);
+    // ২. ইনপুটটি ইমেইল নাকি ইউজারনেম তা ব্যাকএন্ড নিজে থেকেই চেক করবে (Regex দিয়ে)
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(query);
 
-    if (Number.isNaN(receiverUserId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid receiver ID",
+    // ৩. ভেরিয়েবল সংঘাত এড়াতে আমরা একদম ইউনিক নাম 'foundUser' ব্যবহার করছি
+    let foundUser = null;
+
+    // ৪. কন্ডিশন অনুযায়ী প্রিজমা (Prisma) দিয়ে ডাটাবেজ থেকে ইউজার বের করা
+   if (isEmail) {
+      // ইমেইল সাধারণত ইউনিক এবং ছোট হাতের অক্ষরে চেক করা সেফ
+      foundUser = await prisma.users.findFirst({
+        where: {
+          email: {
+            equals: query.toLowerCase().trim(),
+            mode: 'insensitive' // 👈 কেস-সেন্সিটিভ ঝামেলা দূর করবে
+          }
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          avatar: true,
+          is_online: true,
+          last_seen: true,
+        },
+      });
+    } else {
+      // 🟢 ইউজারনেম মিক্সড লেটার হলেও এখন এই insensitive মোডের কারণে ম্যাচ করবে
+      foundUser = await prisma.users.findFirst({
+        where: {
+          username: {
+            equals: query.trim(),
+            mode: 'insensitive' // 👈 Capital/Small অক্ষরের অমিল দূর করবে
+          }
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          avatar: true,
+          is_online: true,
+          last_seen: true,
+        },
       });
     }
+
+    // ৫. ইউজার না পাওয়া গেলে ৪MD৪ এরর রিটার্ন
+    if (!foundUser) {
+      return res.status(404).json({
+        success: false,
+        message: "No user found with this username or email",
+      });
+    }
+
+    const receiverUserId = foundUser.id;
 
     // User cannot chat with themselves
     if (currentUserId === receiverUserId) {
@@ -194,9 +235,7 @@ export const accessConversation = async (req, res) => {
 
       avatar: receiverUser.avatar || null,
 
-      status: receiverUser.is_online
-        ? "online"
-        : "offline",
+      status: receiverUser.is_online ? "online" : "offline",
 
       lastMessage: latestMessage,
 
@@ -216,7 +255,6 @@ export const accessConversation = async (req, res) => {
 
       data: data,
     });
-
   } catch (error) {
     console.error("Access conversation error:", error);
 
