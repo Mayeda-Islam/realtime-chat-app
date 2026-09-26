@@ -9,6 +9,7 @@ import { ChatHeader } from "../components/chat/ChatHeader";
 import { MessageList } from "../components/chat/MessageList";
 import { MessageInput } from "../components/chat/MessageInput";
 import { ConversationList } from "../components/conversation/ConversationList";
+import { useNavigate } from "react-router-dom";
 
 interface Message {
   id: string;
@@ -16,7 +17,12 @@ interface Message {
   text: string;
   timestamp: string;
 }
-
+interface CurrentUser {
+  id?: number;
+  email?: string;
+  username?: string;
+  avatar?: string;
+}
 const INITIAL_MESSAGES: Record<string, Message[]> = {
   user_2: [
     {
@@ -50,11 +56,13 @@ const INITIAL_MESSAGES: Record<string, Message[]> = {
 
 const Chat = () => {
   // মেইন স্টেটগুলো এখানে নিয়ে আসা হলো
+  const[currentUser,setCurrentUser]=useState<CurrentUser>({});
   const [users, setUsers] = useState<ConversationUser[]>([]);
   const [activeUser, setActiveUser] = useState<ConversationUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
+  const navigate=useNavigate()
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -63,6 +71,10 @@ const Chat = () => {
     const fetchConversations = async () => {
       try {
         const token = localStorage.getItem("token");
+        const user= localStorage.getItem("user");
+        if(user){
+          setCurrentUser(JSON.parse(user))
+        }
         const response = await fetch(
           "http://localhost:3001/api/conversations",
           {
@@ -199,61 +211,136 @@ const Chat = () => {
 
   const activeMessages = activeUser ? messages[activeUser.conversationId] || [] : [];
 
+
+  // ১. কম্পোনেন্টের বডির ভেতরে আলাদা ফাংশন তৈরি করুন
+const handleLogout = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("http://localhost:3001/api/auth/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { "Authorization": `Bearer ${token}` }),
+      },
+    });
+
+    if (!response.ok) {
+      console.error("Server-side logout failed, clearing client storage anyway.");
+    }
+  } catch (error) {
+    console.error("Error during API logout:", error);
+  } finally {
+    // ফ্রন্টএন্ড ক্লিনিং এবং রিডাইরেক্ট
+    localStorage.removeItem("token");
+    navigate('/login')
+  }
+};
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* ================= SIDEBAR ================= */}
       <aside className="w-80 md:w-96 bg-surface border-r border-border flex flex-col h-full">
-        {/* App Header with Integrated New Chat & Create Group Components */}
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary to-secondary flex items-center justify-center shadow-md shadow-primary/20">
-              <svg
-                className="w-6 h-6 text-surface fill-current"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 3c-4.97 0-9 3.58-9 8 0 2.04.88 3.92 2.34 5.33-.21 1.25-.8 2.45-1.78 3.35 1.78.14 3.5-.39 4.88-1.29.18.02.36.03.56.03 4.97 0 9-3.58 9-8s-4.03-8-9-8z" />
-              </svg>
-            </div>
-            <h1 className="text-xl font-bold text-primary">ChitChat</h1>
-          </div>
-
-          {/* Embedded New Chat & Create Group Modals */}
-          <div className="flex items-center space-x-2">
-            <NewChat onStartChat={onNewChat} />
-            <CreateGroup onCreateGroup={onCreateGroup} />
-          </div>
+    {/* App Header with Integrated New Chat & Create Group Components */}
+    <div className="p-4 border-b border-border flex items-center justify-between">
+      <div className="flex items-center space-x-3">
+        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary to-secondary flex items-center justify-center shadow-md shadow-primary/20">
+          <svg
+            className="w-6 h-6 text-surface fill-current"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 3c-4.97 0-9 3.58-9 8 0 2.04.88 3.92 2.34 5.33-.21 1.25-.8 2.45-1.78 3.35 1.78.14 3.5-.39 4.88-1.29.18.02.36.03.56.03 4.97 0 9-3.58 9-8s-4.03-8-9-8z" />
+          </svg>
         </div>
+        <h1 className="text-xl font-bold text-primary">ChitChat</h1>
+      </div>
 
-        {/* Search Input */}
-        <div className="p-4">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search conversations..."
-            className="w-full rounded-lg border border-border bg-surface-soft px-4 py-2 text-sm text-text placeholder-text-muted outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
-          />
-        </div>
+      {/* Embedded New Chat & Create Group Modals */}
+      <div className="flex items-center space-x-2">
+        <NewChat onStartChat={onNewChat} />
+        <CreateGroup onCreateGroup={onCreateGroup} />
+      </div>
+    </div>
 
-        {/* Conversation List rendering ConversationItem components */}
-        <div className="flex-1 overflow-y-auto px-2 space-y-1">
-          {/* {filteredUsers.map((user) => (
-          <ConversationItem
-            key={user.id}
-            user={user}
-            isActive={activeUser.id === user.id}
-            onSelect={onSelectUser}
-          />
-        ))} */}
-          <ConversationList
-            searchTerm={searchTerm}
-            activeUser={activeUser}
-            onSelectUser={onSelectUser}
-            loading={loading}
-            users={users}
-          />
+    {/* Search Input */}
+    <div className="p-4">
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search conversations..."
+        className="w-full rounded-lg border border-border bg-surface-soft px-4 py-2 text-sm text-text placeholder-text-muted outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+      />
+    </div>
+
+    {/* Conversation List rendering ConversationItem components */}
+    <div className="flex-1 overflow-y-auto px-2 space-y-1">
+      <ConversationList
+        searchTerm={searchTerm}
+        activeUser={activeUser}
+        onSelectUser={onSelectUser}
+        loading={loading}
+        users={users}
+      />
+    </div>
+
+    {/* ================= SIDEBAR FOOTER: PROFILE & LOGOUT ================= */}
+    <div className="p-4 border-t border-border bg-surface-soft flex items-center justify-between">
+      {/* Profile Button Component (Clicking this can open profile settings/modal) */}
+      <button 
+        onClick={() => {
+          // প্রোফাইল এডিট বা সেটিংস মোডাল খোলার লজিক এখানে দিতে পারেন
+          console.log("Open Profile Settings");
+        }}
+        className="flex items-center space-x-3 text-left flex-1 min-w-0 p-1.5 rounded-lg hover:bg-surface transition-colors group outline-none"
+        title="View Profile"
+      >
+        <div className="relative">
+         {currentUser?.avatar ? (
+        <img
+          src={currentUser.avatar}
+          alt="My Profile"
+          className="w-9 h-9 rounded-full object-cover ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all"
+        />
+      ) : (
+        /* ২. অ্যাভাটার না থাকলে নামের প্রথম অক্ষর দেখাবে (Fallback Container) */
+        <div className="w-9 h-9 rounded-full bg-linear-to-br from-primary/30 to-secondary/30 text-primary font-bold flex items-center justify-center text-sm ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all">
+          {currentUser?.username ? currentUser.username.charAt(0).toUpperCase() : currentUser?.email?.charAt(0).toUpperCase()}
         </div>
-      </aside>
+      )}
+          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-surface-soft rounded-full"></span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-text truncate group-hover:text-primary transition-colors">
+            My Account
+          </p>
+          <p className="text-xs text-text-muted truncate">
+            View Settings
+          </p>
+        </div>
+      </button>
+
+      {/* Log Out Action Button */}
+      <button
+          onClick={handleLogout}
+
+        title="Log Out"
+        className="p-2 ml-2 text-text-muted hover:text-error hover:bg-error/10 rounded-lg transition-colors outline-none"
+      >
+        <svg
+          className="w-5 h-5 fill-none stroke-current"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+      </button>
+    </div>
+  </aside>
 
       {/* ================= CHAT MAIN AREA ================= */}
       <main className="flex-1 flex flex-col bg-background h-full">
@@ -269,7 +356,7 @@ const Chat = () => {
         {/* Message Input Component */}
         <MessageInput
           // activeUserName={activeUser.name}
-          onSendMessage={handleSendMessage}
+          // onSendMessage={handleSendMessage}
         />
       </main>
     </div>

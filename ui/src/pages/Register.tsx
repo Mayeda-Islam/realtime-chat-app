@@ -35,6 +35,9 @@ export default function Register() {
       }
 
       localStorage.setItem("token", data.token);
+      
+      // Save user information
+      localStorage.setItem("user", JSON.stringify(data.user));
       navigate("/chat");
     } catch (err: any) {
       setError(err.message || "Something went wrong. Please try again.");
